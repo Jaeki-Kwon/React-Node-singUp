@@ -3,6 +3,7 @@ const app = express();
 const PORT = 5000;
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const { auth } = require("./middleware/auth");
 const { User } = require("./models/User");
 
 const config = require("./config/key");
@@ -26,7 +27,9 @@ mongoose
 
 app.get("/", (req, res) => res.send("반갑다잉~ 잘가라고~"));
 
-app.post("/register", (req, res) => {
+app.get("/api/hello", (req, res) => res.send("안뇽?!"));
+
+app.post("/api/users/register", (req, res) => {
   // 회원가입 할 때 필요한 정보들 client에서 가져오면
   // 그것들을 데이터베이스에 넣기
   const user = new User(req.body);
@@ -38,10 +41,11 @@ app.post("/register", (req, res) => {
   });
 });
 
-app.post("/login", (req, res) => {
+app.post("/api/users/login", (req, res) => {
   // 1. 요청된 이메일을 데이터베이스에 있는 지 찾는다.
   // 몽고db 내부 함수
   User.findOne({ email: req.body.email }, (err, user) => {
+    console.log("유저", user);
     if (!user) {
       return res.json({
         loginSuccess: false,
@@ -52,7 +56,7 @@ app.post("/login", (req, res) => {
     // console.log("user", user);
     user.comparePassword(req.body.password, (err, isMatch) => {
       console.log("err", err);
-      console.log(req.body.password);
+      console.log("req.body.password", req.body.password);
       console.log("isMatch", isMatch);
       if (!isMatch)
         return res.json({
@@ -71,6 +75,19 @@ app.post("/login", (req, res) => {
           .json({ loginSuccess: true, userId: user._id });
       });
     });
+  });
+});
+
+app.get("/api/users/auth", auth, (req, res) => {
+  res.status(200).json({
+    _id: req.user_.id,
+    isAdmin: req.user.role === 0 ? false : true,
+    isAuth: true,
+    email: req.user.email,
+    name: req.user.name,
+    lastmane: req.user.lastname,
+    role: req.user.role,
+    image: req.user.image,
   });
 });
 
