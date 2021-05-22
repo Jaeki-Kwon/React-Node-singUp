@@ -78,9 +78,12 @@ app.post("/api/users/login", (req, res) => {
   });
 });
 
+// role 1 어드민    role 2 특정 부서 어드민
+// role 0 -> 일반유저   role 0이 아니면  관리자
 app.get("/api/users/auth", auth, (req, res) => {
+  //여기 까지 미들웨어를 통과해 왔다는 얘기는  Authentication 이 True 라는 말.
   res.status(200).json({
-    _id: req.user_.id,
+    _id: req.user._id,
     isAdmin: req.user.role === 0 ? false : true,
     isAuth: true,
     email: req.user.email,
@@ -88,6 +91,16 @@ app.get("/api/users/auth", auth, (req, res) => {
     lastmane: req.user.lastname,
     role: req.user.role,
     image: req.user.image,
+  });
+});
+
+app.get("/api/users/logout", auth, (req, res) => {
+  // console.log('req.user', req.user)
+  User.findOneAndUpdate({ _id: req.user._id }, { token: "" }, (err, user) => {
+    if (err) return res.json({ success: false, err });
+    return res.status(200).send({
+      success: true,
+    });
   });
 });
 
